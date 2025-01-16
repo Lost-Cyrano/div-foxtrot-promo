@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chargement - Lunch Ready</title>
+    <style>
+        /* Loader CSS */
+        .loader {
+            animation: spin 1.5s linear alternate infinite;
+            background: #B73F41;
+            border-radius: 50%;
+            height: 120px;
+            width: 120px;
+        }
+
+        .loader:before {
+            background: #B73F41;
+            border-radius: 50%;
+            content: '';
+            display: block;
+            height: 0.5em;
+            width: 0.5em;
+        }
+
+        .loader:after {
+            background: #262E2A;
+            border-radius: 50%;
+            box-shadow: 0em -2.60em #262E2A,
+                        2.25em -4.02em #212121,
+                        2.25em -1.25em #262E2A,
+                        4.60em 0em #212121,
+                        2.25em 1.25em #262E2A,
+                        2.25em 4.02em #212121,
+                        0em 2.60em #262E2A,
+                        -2.25em 4.02em #212121,
+                        -2.25em 1.25em #262E2A,
+                        -4.60em 0em #212121,
+                        -2.25em -1.25em #262E2A,
+                        -2.25em -4.02em #212121;
+            content: '';
+            display: block;
+            height: 2em;
+            width: 2em;
+        }
+
+        .wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: #1c1c1c;
+            color: white;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-top: 20px;
+        }
+
+        .inner {
+            animation: load 1.5s linear alternate infinite;
+            border: solid 1px #B73F41;
+            border-radius: 50%;
+            height: 1.75em;
+            width: 1.75em;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="loader">
+            <div class="inner"></div>
+        </div>
+        <h1 id="user-info">Chargement...</h1>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAvg5znmGjwm5-7oSVM81q6ko--9rMOdrs",
+            authDomain: "division-foxtrot-promotion.firebaseapp.com",
+            projectId: "division-foxtrot-promotion",
+            storageBucket: "division-foxtrot-promotion.firebasestorage.app",
+            messagingSenderId: "465611558296",
+            appId: "1:465611558296:web:0fd37d74c59bf92aa46fed",
+            measurementId: "G-8RH8M7PWXJ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const uid = urlParams.get('uid');
+
+        async function loadUserData() {
+            try {
+                const userDoc = await getDoc(doc(db, "users_datas", uid));
+
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    const userInfo = `Compte du ${data.grade} ${data.name}`;
+                    document.getElementById('user-info').innerText = userInfo;
+
+                    // Ensure the loader stays for at least 6 seconds
+                    setTimeout(() => {
+                        alert("Bienvenue !");
+                    }, 6000);
+                } else {
+                    alert("Données utilisateur introuvables.");
+                }
+            } catch (error) {
+                alert("Erreur: " + error.message);
+            }
+        }
+
+        loadUserData();
+    </script>
+</body>
+</html>
