@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - Lunch Ready</title>
+    <style>
+        /* Login Form CSS */
+        .wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: #1c1c1c;
+            color: white;
+        }
+
+        .login {
+            width: 340px;
+            height: 400px;
+            background: #2c2c2c;
+            padding: 47px;
+            color: #fff;
+            border-radius: 17px;
+            font-size: 1.3em;
+        }
+
+        .login input[type="text"], .login input[type="password"] {
+            display: block;
+            border: none;
+            outline: none;
+            width: 100%;
+            padding: 13px 18px;
+            margin: 20px 0 0 0;
+            font-size: 0.8em;
+            border-radius: 100px;
+            background: #3c3c3c;
+            color: #fff;
+        }
+
+        .login input[type=submit] {
+            background: linear-gradient(144deg, #af40ff, #5b42f3 50%, #00ddeb);
+            color: #fff;
+            padding: 16px;
+            border: none;
+            border-radius: 500px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <!-- Login Form -->
+        <div class="login">
+            <div class="h1">Connexion</div>
+            <input type="text" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Mot de passe">
+            <input type="submit" value="Se connecter" onclick="login()">
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAvg5znmGjwm5-7oSVM81q6ko--9rMOdrs",
+            authDomain: "division-foxtrot-promotion.firebaseapp.com",
+            projectId: "division-foxtrot-promotion",
+            storageBucket: "division-foxtrot-promotion.firebasestorage.app",
+            messagingSenderId: "465611558296",
+            appId: "1:465611558296:web:0fd37d74c59bf92aa46fed",
+            measurementId: "G-8RH8M7PWXJ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // Redirect to the loading page with user UID as a parameter
+                window.location.href = `loading.html?uid=${user.uid}`;
+            } catch (error) {
+                alert("Erreur: " + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
