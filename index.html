@@ -34,7 +34,7 @@
             color: #fff;
         }
 
-        .login input[type="submit"] {
+        .login input[type=submit] {
             background: linear-gradient(144deg, #af40ff, #5b42f3 50%, #00ddeb);
             color: #fff;
             padding: 12px;
@@ -76,7 +76,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
+        import { getAuth, signInWithPopup, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
 
         // Configuration Firebase
         const firebaseConfig = {
@@ -119,8 +119,10 @@
                     return;
                 }
 
-                // Attempt Firebase Authentication
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                // Attempt Firebase Authentication using popup
+                const provider = new EmailAuthProvider();
+                provider.setCustomParameters({ email });
+                const userCredential = await signInWithPopup(auth, provider);
                 const user = userCredential.user;
 
                 // Debug Step: Login Successful
@@ -141,6 +143,8 @@
                     status.innerText = "Mot de passe incorrect.";
                 } else if (error.code === 'auth/network-request-failed') {
                     status.innerText = "Connexion internet requise.";
+                } else if (error.code === 'auth/popup-blocked') {
+                    status.innerText = "Pop-up bloqué par le navigateur. Autorisez les pop-ups.";
                 } else {
                     status.innerText = "Une erreur est survenue. Réessayez.";
                 }
