@@ -3,84 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chargement - Lunch Ready</title>
+    <title>Connexion - Lunch Ready</title>
     <style>
-        /* Loader CSS */
-        .loader {
-            animation: spin 1.5s linear alternate infinite;
-            background: #B73F41;
-            border-radius: 50%;
-            height: 120px;
-            width: 120px;
-        }
-
-        .loader:before {
-            background: #B73F41;
-            border-radius: 50%;
-            content: '';
-            display: block;
-            height: 0.5em;
-            width: 0.5em;
-        }
-
-        .loader:after {
-            background: #262E2A;
-            border-radius: 50%;
-            box-shadow: 0em -2.60em #262E2A,
-                        2.25em -4.02em #212121,
-                        2.25em -1.25em #262E2A,
-                        4.60em 0em #212121,
-                        2.25em 1.25em #262E2A,
-                        2.25em 4.02em #212121,
-                        0em 2.60em #262E2A,
-                        -2.25em 4.02em #212121,
-                        -2.25em 1.25em #262E2A,
-                        -4.60em 0em #212121,
-                        -2.25em -1.25em #262E2A,
-                        -2.25em -4.02em #212121;
-            content: '';
-            display: block;
-            height: 2em;
-            width: 2em;
-        }
-
         .wrap {
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
             background: #1c1c1c;
             color: white;
-            text-align: center;
         }
 
-        h1 {
-            font-size: 2rem;
-            margin-top: 20px;
+        .login {
+            width: 340px;
+            height: 450px;
+            background: #2c2c2c;
+            padding: 40px;
+            color: #fff;
+            border-radius: 15px;
         }
 
-        .inner {
-            animation: load 1.5s linear alternate infinite;
-            border: solid 1px #B73F41;
-            border-radius: 50%;
-            height: 1.75em;
-            width: 1.75em;
+        .login input[type="text"], .login input[type="password"] {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 20px 0;
+            background: #3c3c3c;
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+        }
+
+        .login input[type="submit"] {
+            background: linear-gradient(144deg, #af40ff, #5b42f3 50%, #00ddeb);
+            color: #fff;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .status {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #ff4d4d;
+        }
+
+        .debug {
+            margin-top: 15px;
+            padding: 10px;
+            background: #444;
+            color: #fff;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            max-height: 100px;
+            overflow-y: auto;
         }
     </style>
 </head>
 <body>
     <div class="wrap">
-        <div class="loader">
-            <div class="inner"></div>
+        <div class="login">
+            <div class="h1">Connexion</div>
+            <input type="text" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Mot de passe">
+            <input type="submit" value="Se connecter" onclick="login()">
+            <div id="status" class="status"></div>
+            <div id="debug" class="debug"></div>
         </div>
-        <h1 id="user-info">Chargement...</h1>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
 
+        // Configuration Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAvg5znmGjwm5-7oSVM81q6ko--9rMOdrs",
             authDomain: "division-foxtrot-promotion.firebaseapp.com",
@@ -92,33 +90,62 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const auth = getAuth(app);
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const uid = urlParams.get('uid');
-
-        async function loadUserData() {
-            try {
-                const userDoc = await getDoc(doc(db, "users_datas", uid));
-
-                if (userDoc.exists()) {
-                    const data = userDoc.data();
-                    const userInfo = `Compte du ${data.grade} ${data.name}`;
-                    document.getElementById('user-info').innerText = userInfo;
-
-                    // Ensure the loader stays for at least 6 seconds
-                    setTimeout(() => {
-                        alert("Bienvenue !");
-                    }, 6000);
-                } else {
-                    alert("Données utilisateur introuvables.");
-                }
-            } catch (error) {
-                alert("Erreur: " + error.message);
-            }
+        // Debug Helper
+        function updateDebug(message) {
+            const debugBox = document.getElementById('debug');
+            debugBox.innerHTML += `<p>${message}</p>`;
         }
 
-        loadUserData();
+        // Login Function
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const status = document.getElementById('status');
+            const debugBox = document.getElementById('debug');
+
+            // Reset status and debug
+            status.innerText = '';
+            debugBox.innerHTML = '';
+
+            try {
+                // Debug Step: Starting Login
+                updateDebug("Tentative de connexion...");
+                
+                if (!email || !password) {
+                    status.innerText = "Veuillez remplir tous les champs.";
+                    updateDebug("Champs requis manquants.");
+                    return;
+                }
+
+                // Attempt Firebase Authentication
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // Debug Step: Login Successful
+                updateDebug(`Connexion réussie pour UID: ${user.uid}`);
+                status.innerText = "Connexion réussie. Redirection en cours...";
+
+                // Redirect with UID
+                window.location.href = `loading.html?uid=${user.uid}`;
+            } catch (error) {
+                // Handle Errors with Debug
+                updateDebug(`Erreur: ${error.message}`);
+                
+                if (error.code === 'auth/invalid-email') {
+                    status.innerText = "Email invalide.";
+                } else if (error.code === 'auth/user-not-found') {
+                    status.innerText = "Utilisateur non trouvé.";
+                } else if (error.code === 'auth/wrong-password') {
+                    status.innerText = "Mot de passe incorrect.";
+                } else if (error.code === 'auth/network-request-failed') {
+                    status.innerText = "Connexion internet requise.";
+                } else {
+                    status.innerText = "Une erreur est survenue. Réessayez.";
+                }
+            }
+        }
     </script>
 </body>
 </html>
