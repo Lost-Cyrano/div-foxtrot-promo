@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Division Foxtrot - Connexion</title>
+    <title>Connexion - Lunch Ready</title>
     <style>
-        /* Login Form CSS */
         .wrap {
             display: flex;
             align-items: center;
@@ -17,54 +16,61 @@
 
         .login {
             width: 340px;
-            height: 400px;
+            height: 450px;
             background: #2c2c2c;
-            padding: 47px;
+            padding: 40px;
             color: #fff;
-            border-radius: 17px;
-            font-size: 1.3em;
+            border-radius: 15px;
         }
 
         .login input[type="text"], .login input[type="password"] {
             display: block;
-            border: none;
-            outline: none;
             width: 100%;
-            padding: 13px 18px;
-            margin: 20px 0 0 0;
-            font-size: 0.8em;
-            border-radius: 100px;
+            padding: 10px;
+            margin: 20px 0;
             background: #3c3c3c;
+            border: none;
+            border-radius: 8px;
             color: #fff;
         }
 
-        .login input[type=submit] {
+        .login input[type="submit"] {
             background: linear-gradient(144deg, #af40ff, #5b42f3 50%, #00ddeb);
             color: #fff;
-            padding: 16px;
+            padding: 12px;
             border: none;
-            border-radius: 500px;
-            font-weight: 600;
+            border-radius: 8px;
             cursor: pointer;
-            margin-top: 20px;
+            font-size: 1rem;
         }
 
-        .error {
-            color: #ff4d4d;
-            font-size: 0.9em;
+        .status {
             margin-top: 10px;
+            font-size: 0.9rem;
+            color: #ff4d4d;
+        }
+
+        .debug {
+            margin-top: 15px;
+            padding: 10px;
+            background: #444;
+            color: #fff;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            max-height: 100px;
+            overflow-y: auto;
         }
     </style>
 </head>
 <body>
     <div class="wrap">
-        <!-- Login Form -->
         <div class="login">
             <div class="h1">Connexion</div>
             <input type="text" id="email" placeholder="Email">
             <input type="password" id="password" placeholder="Mot de passe">
             <input type="submit" value="Se connecter" onclick="login()">
-            <div id="error-message" class="error"></div>
+            <div id="status" class="status"></div>
+            <div id="debug" class="debug"></div>
         </div>
     </div>
 
@@ -72,6 +78,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
 
+        // Configuration Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAvg5znmGjwm5-7oSVM81q6ko--9rMOdrs",
             authDomain: "division-foxtrot-promotion.firebaseapp.com",
@@ -85,32 +92,57 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
 
+        // Debug Helper
+        function updateDebug(message) {
+            const debugBox = document.getElementById('debug');
+            debugBox.innerHTML += `<p>${message}</p>`;
+        }
+
+        // Login Function
         async function login() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const errorMessage = document.getElementById('error-message');
+            const status = document.getElementById('status');
+            const debugBox = document.getElementById('debug');
 
-            errorMessage.innerText = ""; // Clear previous error messages
+            // Reset status and debug
+            status.innerText = '';
+            debugBox.innerHTML = '';
 
             try {
-                // Attempt to log in the user
+                // Debug Step: Starting Login
+                updateDebug("Tentative de connexion...");
+                
+                if (!email || !password) {
+                    status.innerText = "Veuillez remplir tous les champs.";
+                    updateDebug("Champs requis manquants.");
+                    return;
+                }
+
+                // Attempt Firebase Authentication
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
 
-                // Redirect to the loading page with user UID as a parameter
+                // Debug Step: Login Successful
+                updateDebug(`Connexion réussie pour UID: ${user.uid}`);
+                status.innerText = "Connexion réussie. Redirection en cours...";
+
+                // Redirect with UID
                 window.location.href = `loading.html?uid=${user.uid}`;
             } catch (error) {
-                // Handle errors and display specific messages
-                if (error.code === "auth/invalid-email") {
-                    errorMessage.innerText = "Email invalide. Vérifiez votre adresse.";
-                } else if (error.code === "auth/user-not-found") {
-                    errorMessage.innerText = "Utilisateur non trouvé. Vérifiez vos informations.";
-                } else if (error.code === "auth/wrong-password") {
-                    errorMessage.innerText = "Mot de passe incorrect.";
-                } else if (error.code === "auth/network-request-failed") {
-                    errorMessage.innerText = "Connexion internet requise.";
+                // Handle Errors with Debug
+                updateDebug(`Erreur: ${error.message}`);
+                
+                if (error.code === 'auth/invalid-email') {
+                    status.innerText = "Email invalide.";
+                } else if (error.code === 'auth/user-not-found') {
+                    status.innerText = "Utilisateur non trouvé.";
+                } else if (error.code === 'auth/wrong-password') {
+                    status.innerText = "Mot de passe incorrect.";
+                } else if (error.code === 'auth/network-request-failed') {
+                    status.innerText = "Connexion internet requise.";
                 } else {
-                    errorMessage.innerText = "Une erreur inattendue est survenue. Réessayez plus tard.";
+                    status.innerText = "Une erreur est survenue. Réessayez.";
                 }
             }
         }
